@@ -527,48 +527,56 @@ class TSDF:
     #
 
     def show(
-        self, n: int = 20, k: int = 5, truncate: bool = True, vertical: bool = False
+        self,
+        n: int = 20,
+        truncate: bool = True,
+        vertical: bool = False,
+        show_in_order=False,
     ) -> None:
         """
-        pyspark.sql.DataFrame.show() method's equivalent for TSDF objects
+        Equivalent to the `pyspark.sql.DataFrame.show()` method for TSDF objects.
 
-        Parameters
-        ----------
-        n : int, optional
-        Number of rows to show.
-        truncate : bool or int, optional
-        If set to ``True``, truncate strings longer than 20 chars by default.
-        If set to a number greater than one, truncates long strings to length ``truncate``
-        and align cells right.
-        vertical : bool, optional
-        If set to ``True``, print output rows vertically (one line
-        per column value).
+        :param n: int, optional
+            Number of rows to show.
+        :param truncate: bool or int, optional
+            If set to ``True``, truncate strings longer than 20 chars by default.
+            If set to a number greater than one, truncates long strings to length ``truncate``
+            and aligns cells right.
+        :param vertical: bool, optional
+            If set to ``True``, print output rows vertically (one line per column value).
+        :param show_in_order: bool, optional
+            If set to `True`, show the n most recent records per series, in order.
 
-        Example to show usage
-        ---------------------
-        from pyspark.sql.functions import *
+        :return: None
 
-        phone_accel_df = spark.read.format("csv").option("header", "true").load("dbfs:/home/tempo/Phones_accelerometer").withColumn("event_ts", (col("Arrival_Time").cast("double")/1000).cast("timestamp")).withColumn("x", col("x").cast("double")).withColumn("y", col("y").cast("double")).withColumn("z", col("z").cast("double")).withColumn("event_ts_dbl", col("event_ts").cast("double"))
+        Examples
+        --------
+        Usage example:
 
-        from tempo import *
+        >>> from pyspark.sql.functions import *
+        >>> from tempo import TSDF
 
-        phone_accel_tsdf = TSDF(phone_accel_df, ts_col="event_ts", partition_cols = ["User"])
+        >>> # Your DataFrame creation code here
 
-        # Call show method here
-        phone_accel_tsdf.show()
+        >>> phone_accel_df = spark.read.format("csv").option("header", "true").load("dbfs:/home/tempo/Phones_accelerometer").withColumn("event_ts", (col("Arrival_Time").cast("double")/1000).cast("timestamp")).withColumn("x", col("x").cast("double")).withColumn("y", col("y").cast("double")).withColumn("z", col("z").cast("double")).withColumn("event_ts_dbl", col("event_ts").cast("double"))
+
+        >>> # Create a TSDF object
+        >>> phone_accel_tsdf = TSDF(phone_accel_df, ts_col="event_ts", partition_cols=["User"])
+
+        >>> # Call the show method
+        >>> phone_accel_tsdf.show()
 
         """
-        # validate k <= n
-        if k > n:
-            raise ValueError(f"Parameter k {k} cannot be greater than parameter n {n}")
-
         if not t_utils.IS_DATABRICKS and t_utils.ENV_CAN_RENDER_HTML:
             # In Jupyter notebooks, for wide dataframes the below line will enable
             # rendering the output in a scrollable format.
             ipydisplay(
                 HTML("<style>pre { white-space: pre !important; }</style>")
             )  # pragma: no cover
-        t_utils.get_display_df(self, k).show(n, truncate, vertical)
+        if show_in_order:
+            t_utils.get_display_df(self, n).show(n, truncate, vertical)
+        else:
+            self.df.show(n, truncate, vertical)
 
     def describe(self) -> DataFrame:
         """

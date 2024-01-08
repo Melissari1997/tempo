@@ -170,13 +170,23 @@ def display_unavailable() -> None:
     )
 
 
-def get_display_df(tsdf: t_tsdf.TSDF, k: int) -> DataFrame:
-    # let's show the n most recent records per series, in order:
+def get_display_df(tsdf: t_tsdf.TSDF, n: int) -> DataFrame:
+    """
+    Retrieve a DataFrame displaying the n most recent records per series from a Time Series DataFrame (TSDF).
+
+    :param tsdf: t_tsdf.TSDF
+        The Time Series DataFrame from which to extract the records.
+    :param n: int
+        The number of most recent records to retrieve per series.
+
+    :return: DataFrame
+        A DataFrame containing the n most recent records per series, ordered by the specified columns.
+    """
     orderCols = tsdf.partitionCols.copy()
     orderCols.append(tsdf.ts_col)
     if tsdf.sequence_col:
         orderCols.append(tsdf.sequence_col)
-    return tsdf.latest(k).df.orderBy(orderCols)
+    return tsdf.latest(n).df.orderBy(orderCols)
 
 
 ENV_CAN_RENDER_HTML = _is_capable_of_html_rendering()
